@@ -4,30 +4,65 @@ MING is a containerised IoT sensor server stack in the traditions of LAMP.
 
 We've leveraged #OpenBalena to provide a embedded Linux environment to provide:
 
-- Mosquitto MQtt broker listening on port 1883 for MQtt message publications
+- **SWAG** (Secure Web Application Gateway) - Reverse proxy with SSL/TLS support listening on ports 80/443, providing secure access to all web services
 
-- InfluxDB listening on port 8086 providing a time series database for sensor data storage
+- **Mosquitto** - MQtt broker listening on port 1883 for MQtt message publications
 
-- NodeRed listening on port 1880 to provide an easy to use graphical environment for parsing,
-  analysing, storing, and forwarding sensor data messages
+- **InfluxDB** - Time series database listening on port 8086 for sensor data storage
 
-  We've also installed the NodeRed InfluxDB nodes by default so you easily store and retrieve
-  data locally.
+- **Node-RED** - Flow-based programming environment listening on port 1880 for parsing, analysing, storing, and forwarding sensor data messages
+  
+  We've also installed the Node-RED InfluxDB nodes by default so you can easily store and retrieve data locally.
 
-- Grafana listening on port 80 providing a data visualisation environment for sensor data.
+- **Grafana** - Data visualisation dashboard listening on port 3000
 
-Each of these applications is built and runs in its own container on an
-embedded Linux target supporting Balena.io (Docker for Embedded Systems).
+- **Home Assistant** - Open source home automation platform listening on port 8123
+
+- **JupyterLab** - Interactive computing environment listening on port 8888
+
+- **Duplicati** - Backup solution listening on port 8200 for automated backups of all service data
+
+Each of these applications is built and runs in its own container on an embedded Linux target supporting Balena.io (Docker for Embedded Systems).
+
+## Accessing Services
+
+All web services are accessible through the SWAG reverse proxy at the following subdirectories:
+
+- Home Assistant: `https://yourdomain.com/homeassistant/`
+- Node-RED: `https://yourdomain.com/nodered/`
+- Grafana: `https://yourdomain.com/grafana/`
+- InfluxDB: `https://yourdomain.com/influxdb/`
+- JupyterLab: `https://yourdomain.com/jupyterlab/`
+- Duplicati: `https://yourdomain.com/duplicati/`
+
+Services are also accessible directly via their individual ports if needed.
+
+# Configuration
+
+## SWAG Reverse Proxy Setup
+
+Before deploying, you'll need to configure SWAG in [`docker-compose.yml`](docker-compose.yml):
+
+1. Set your domain: Change `URL=yourdomain.com` to your actual domain
+2. Configure validation method: Set `VALIDATION` to your preferred method (http, dns, etc.)
+3. For SSL certificates, you may need to configure additional DNS or port forwarding settings
+
+## Home Assistant Configuration
+
+To enable Home Assistant to work properly behind the SWAG reverse proxy, add the following to `/config/configuration.yaml` in your Home Assistant container:
+
+```yaml
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.18.0.0/16
+```
 
 # Optional Components
 
-We've added some nice applications that we think run nicely alongside the MING stack, they can be optionally enabled by uncommenting them in the [`docker-compose.yml`](docker-compose.yml) file in this repo
+We've added some nice applications that can be optionally enabled by uncommenting them in the [`docker-compose.yml`](docker-compose.yml) file in this repo
 
 These components are:
-
-## [Home-Assistant](https://www.home-assistant.io/)
-
-Open source home automation that puts local control and privacy first.
 
 ## [Rhasspy](https://rhasspy.readthedocs.io/en/latest/)
 
@@ -35,31 +70,37 @@ Rhasspy (pronounced RAH-SPEE) is an open source, fully offline voice assistant t
 
 ## [Wifi-Connect](https://github.com/balena-io/wifi-connect) (AP Mode)
 
-This is only available When using Balena. It allows you to a Wifi Access Point on a device with AP capable hardware such as a Raspberry Pi 3, simply uncomment the docker-compose SERVICE labelled "ap" and set `MING_AP` to a value of `1` in your [Balena device variables or service variables](#configure-via-environment-variables).
+This is only available when using Balena. It allows you to create a Wifi Access Point on a device with AP capable hardware such as a Raspberry Pi 3, simply uncomment the docker-compose SERVICE labelled "ap" and set `MING_AP` to a value of `1` in your [Balena device variables or service variables](#configure-via-environment-variables).
 
 ## Enabling these optional components
 
-To enable [Home-Assistant](https://www.home-assistant.io/) for example, uncomment it in [`docker-compose.yml`](docker-compose.yml)
+To enable [Rhasspy](https://rhasspy.readthedocs.io/en/latest/) for example, uncomment it in [`docker-compose.yml`](docker-compose.yml)
 
 Enabled ✔
 ```
-  hassio:
+  rhasspy:
     restart: always
-    build: ./hassio
+    build: ./rhasspy
     ports:
-      - "8123:8123" 
+      - "12101:12101"
     volumes:
-      - 'hassio-data:/config'
+      - 'rhasspy-data:/profiles'
+    devices:
+      - "/dev/snd:/dev/snd"
+    command: --user-profiles /profiles --profile en
 ```
 Disabled ✖
 ```
-#  hassio:
+#  rhasspy:
 #    restart: always
-#    build: ./hassio
+#    build: ./rhasspy
 #    ports:
-#      - "8123:8123" 
+#      - "12101:12101"
 #    volumes:
-#      - 'hassio-data:/config'
+#      - 'rhasspy-data:/profiles'
+#    devices:
+#      - "/dev/snd:/dev/snd"
+#    command: --user-profiles /profiles --profile en
 ```
 
 # Supported Targets
@@ -124,15 +165,34 @@ If you run into problems just try pinging to the local IP address you see on the
 
 With connectivity working you can now take a look at the servers running on the target.
 
-- NodeRed http://e844144.local:1880
+## Through SWAG Reverse Proxy (Recommended)
+
+Access all services securely through SWAG at https://e844144.local/ (or your configured domain):
+
+- Home Assistant: https://e844144.local/homeassistant/
+- Node-RED: https://e844144.local/nodered/
+- Grafana: https://e844144.local/grafana/ (default password: admin, admin)
+- InfluxDB: https://e844144.local/influxdb/
+- JupyterLab: https://e844144.local/jupyterlab/
+- Duplicati: https://e844144.local/duplicati/
+
+## Direct Port Access
+
+You can also access services directly via their ports:
+
+- Node-RED: http://e844144.local:1880
 
 ![](https://i.ibb.co/pPMRkgS/Screenshot-from-2019-10-13-19-00-18.png)
 
-- Grafana http://e844144.local:80 (default password: admin, admin)
+- Grafana: http://e844144.local:3000 (default password: admin, admin)
 
 ![](https://i.ibb.co/rZ8C1qD/Screenshot-from-2019-10-13-19-00-54.png)
 
-- You can also publish to Mosquitto using MQtt on the default port 1883
+- Home Assistant: http://e844144.local:8123
+- JupyterLab: http://e844144.local:8888
+- InfluxDB: http://e844144.local:8086
+- Duplicati: http://e844144.local:8200
+- Mosquitto MQTT: tcp://e844144.local:1883
 
 # Maintainer / Contributors
 

@@ -1,0 +1,4 @@
+FROM --platform=linux/%%BALENA_ARCH%% linuxserver/duplicati:latest
+
+# Expose port
+EXPOSE 8200

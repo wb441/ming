@@ -6,6 +6,8 @@ volumes:
     jupyterlab-data:
     homeassistant-data:
     rhasspy-data:
+    swag-data:
+    duplicati-data:
 services:
   nodered:
     restart: always
@@ -29,6 +31,8 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     ports:
       - "3000:3000"
     volumes:
@@ -48,13 +52,55 @@ services:
       - "8888:8888"
     volumes:
       - 'jupyterlab-data:/data'
-#  homeassistant:
-#    restart: always
-#    build: ./homeassistant
-#    ports:
-#      - "8123:8123" 
-#    volumes:
-#      - 'homeassistant-data:/config'
+  homeassistant:
+    restart: always
+    build: ./homeassistant
+    ports:
+      - "8123:8123" 
+    volumes:
+      - 'homeassistant-data:/config'
+  swag:
+    restart: always
+    build: ./swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - URL=yourdomain.com
+      - VALIDATION=http
+      - ONLY_SUBDOMAINS=false
+      - STAGING=false # Set to true for testing SSL certificates
+    volumes:
+      - 'swag-data:/config'
+      - './swag/homeassistant.subfolder.conf:/config/nginx/proxy-confs/homeassistant.subfolder.conf'
+      - './swag/nodered.subfolder.conf:/config/nginx/proxy-confs/nodered.subfolder.conf'
+      - './swag/grafana.subfolder.conf:/config/nginx/proxy-confs/grafana.subfolder.conf'
+      - './swag/influxdb.subfolder.conf:/config/nginx/proxy-confs/influxdb.subfolder.conf'
+      - './swag/jupyterlab.subfolder.conf:/config/nginx/proxy-confs/jupyterlab.subfolder.conf'
+      - './swag/duplicati.subfolder.conf:/config/nginx/proxy-confs/duplicati.subfolder.conf'
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - homeassistant
+  duplicati:
+    restart: always
+    build: ./duplicati
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - 'duplicati-data:/config'
+      - 'nodered-data:/source/nodered:ro'
+      - 'influxdb-data:/source/influxdb:ro'
+      - 'grafana-data:/source/grafana:ro'
+      - 'homeassistant-data:/source/homeassistant:ro'
+      - 'jupyterlab-data:/source/jupyterlab:ro'
+    ports:
+      - "8200:8200"
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy
