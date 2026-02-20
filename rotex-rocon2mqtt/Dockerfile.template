@@ -1,0 +1,58 @@
+# Multi-stage Dockerfile for RoconMqtt (.NET 10)
+# Clones from GitHub and builds for the target architecture
+
+# ===========================
+# Build Stage
+# ===========================
+FROM --platform=linux/%%BALENA_ARCH%% mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Install git to clone the repository
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# Clone the repository
+RUN git clone https://github.com/DoctaShizzle/rotex-rocon2mqtt.git /src
+
+# Map Balena architecture to .NET runtime identifier
+# This ensures we build for the correct architecture
+RUN case "%%BALENA_ARCH%%" in \
+    aarch64) export RID="linux-arm64" ;; \
+    armv7hf) export RID="linux-arm" ;; \
+    amd64) export RID="linux-x64" ;; \
+    *) export RID="linux-x64" ;; \
+    esac && \
+    echo "Building for runtime: $RID" && \
+    dotnet publish src/RoconMqtt/RoconMqtt.csproj \
+    -c Release \
+    -r $RID \
+    --self-contained true \
+    -p:PublishSingleFile=true \
+    -p:PublishTrimmed=true \
+    -p:TrimMode=partial \
+    -o /app/publish
+
+# ===========================
+# Runtime Stage
+# ===========================
+FROM --platform=linux/%%BALENA_ARCH%% mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine AS runtime
+
+# Install required runtime dependencies
+RUN apk add --no-cache libgcc libstdc++ icu-libs
+
+WORKDIR /app
+
+# Copy published application from build stage
+COPY --from=build /app/publish .
+
+# Make the RoconMqtt binary executable
+RUN chmod +x /app/RoconMqtt
+
+# Expose Kestrel HTTP port
+EXPOSE 5000
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Run the application
+ENTRYPOINT ["/app/RoconMqtt"]
