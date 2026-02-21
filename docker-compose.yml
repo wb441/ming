@@ -83,24 +83,6 @@ services:
       - "443:443"
     depends_on:
       - homeassistant
-      - duplicati
-  duplicati:
-    restart: always
-    build: ./duplicati
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - CLI_ARGS=--webservice-interface=any --webservice-port=8200
-    volumes:
-      - 'duplicati-data:/config'
-      - 'nodered-data:/source/nodered:ro'
-      - 'influxdb-data:/source/influxdb:ro'
-      - 'grafana-data:/source/grafana:ro'
-      - 'homeassistant-data:/source/homeassistant:ro'
-      - 'jupyterlab-data:/source/jupyterlab:ro'
-    ports:
-      - "8200:8200"
   setup-can:
     image: alpine:latest
     network_mode: host
