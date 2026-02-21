@@ -1,0 +1,6 @@
+FROM --platform=linux/%%BALENA_ARCH%% ghcr.io/linuxserver/duckdns:latest
+
+ENV PUID=1000
+ENV PGID=1000
+ENV TZ=UTC
+# Set SUBDOMAINS and TOKEN via docker-compose.yml or balena dashboard

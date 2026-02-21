@@ -8,6 +8,9 @@ volumes:
     rhasspy-data:
     swag-data:
     duplicati-data:
+    redis-data:
+    matter-server-data:
+    duckdns-data:
 services:
   nodered:
     restart: always
@@ -101,6 +104,30 @@ services:
       - 'jupyterlab-data:/source/jupyterlab:ro'
     ports:
       - "8200:8200"
+  duckdns:
+    restart: always
+    build: ./duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - SUBDOMAINS=yourdomain
+      - TOKEN=your-duckdns-token
+    volumes:
+      - 'duckdns-data:/config'
+  matter-server:
+    restart: always
+    build: ./matter-server
+    network_mode: host
+    volumes:
+      - 'matter-server-data:/data'
+  redis:
+    restart: always
+    build: ./redis
+    volumes:
+      - 'redis-data:/data'
+    ports:
+      - "6379:6379"
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy
