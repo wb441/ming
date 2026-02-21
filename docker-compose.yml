@@ -112,8 +112,11 @@ services:
         echo 'Set BALENA_HOST_CONFIG_dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25';
         exit 0;
       fi;
-      ip link set can0 down 2>/dev/null || true;
-      ip link set can0 type can bitrate 20000;
+      if ip link show can0 | grep -q 'UP'; then
+        echo 'CAN interface can0 is already up, skipping configuration';
+        exit 0;
+      fi;
+      ip link set can0 type can bitrate 20000 2>/dev/null || echo 'Note: interface may already be configured';
       ip link set can0 up;
       echo 'CAN interface can0 is up with bitrate 20000';
       "
