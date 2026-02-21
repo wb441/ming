@@ -83,6 +83,7 @@ services:
       - "443:443"
     depends_on:
       - homeassistant
+      - duplicati
   duplicati:
     restart: always
     build: ./duplicati
