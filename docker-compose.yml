@@ -91,7 +91,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - CLI_ARGS=--webservice-interface=any --webservice-port=8200 --webservice-webroot=/duplicati
+      - CLI_ARGS=--webservice-interface=any --webservice-port=8200
     volumes:
       - 'duplicati-data:/config'
       - 'nodered-data:/source/nodered:ro'
