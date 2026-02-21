@@ -14,10 +14,10 @@ After your Home Assistant container starts for the first time, you need to confi
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - 172.18.0.0/16
-    - 192.168.0.0/16
-    - 10.0.0.0/8
+    - 172.16.0.0/12
 ```
+
+**Note**: The `172.16.0.0/12` range covers typical Docker network subnets and includes your SWAG container's IP address.
 
 4. Restart Home Assistant
 
