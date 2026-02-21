@@ -184,12 +184,22 @@ services:
       - SHARE3=grafana;/shares/grafana;yes;no;no;balena;balena
       - SHARE4=homeassistant;/shares/homeassistant;yes;no;no;balena;balena
       - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;balena;balena
+      - SHARE6=swag;/shares/swag;yes;no;no;balena;balena
+      - SHARE7=duplicati;/shares/duplicati;yes;no;no;balena;balena
+      - SHARE8=redis;/shares/redis;yes;no;no;balena;balena
+      - SHARE9=duckdns;/shares/duckdns;yes;no;no;balena;balena
+      - SHARE10=matter-server;/shares/matter-server;yes;no;no;balena;balena
     volumes:
       - 'nodered-data:/shares/nodered'
       - 'influxdb-data:/shares/influxdb'
       - 'grafana-data:/shares/grafana'
       - 'homeassistant-data:/shares/homeassistant'
       - 'jupyterlab-data:/shares/jupyterlab'
+      - 'swag-data:/shares/swag'
+      - 'duplicati-data:/shares/duplicati'
+      - 'redis-data:/shares/redis'
+      - 'duckdns-data:/shares/duckdns'
+      - 'matter-server-data:/shares/matter-server'
       - 'samba-data:/config'
     ports:
       - "139:139"
