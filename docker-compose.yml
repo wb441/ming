@@ -77,13 +77,6 @@ services:
       - STAGING=false # Set to true for testing SSL certificates
     volumes:
       - 'swag-data:/config'
-      - './swag/homeassistant.subfolder.conf:/config/nginx/proxy-confs/homeassistant.subfolder.conf'
-      - './swag/nodered.subfolder.conf:/config/nginx/proxy-confs/nodered.subfolder.conf'
-      - './swag/grafana.subfolder.conf:/config/nginx/proxy-confs/grafana.subfolder.conf'
-      - './swag/influxdb.subfolder.conf:/config/nginx/proxy-confs/influxdb.subfolder.conf'
-      - './swag/jupyterlab.subfolder.conf:/config/nginx/proxy-confs/jupyterlab.subfolder.conf'
-      - './swag/duplicati.subfolder.conf:/config/nginx/proxy-confs/duplicati.subfolder.conf'
-      - './swag/roconmqtt.subfolder.conf:/config/nginx/proxy-confs/roconmqtt.subfolder.conf'
     ports:
       - "80:80"
       - "443:443"
