@@ -1,0 +1,5 @@
+FROM --platform=linux/%%BALENA_ARCH%% dperson/samba:latest
+
+# Samba server for network file access
+# Default ports: 139, 445
+# Configure users and shares via environment variables

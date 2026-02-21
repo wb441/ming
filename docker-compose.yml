@@ -11,6 +11,7 @@ volumes:
     redis-data:
     matter-server-data:
     duckdns-data:
+    samba-data:
 services:
   nodered:
     restart: always
@@ -169,6 +170,30 @@ services:
       - 'redis-data:/data'
     ports:
       - "6379:6379"
+  samba:
+    restart: always
+    build: ./samba
+    environment:
+      - USERID=1000
+      - GROUPID=1000
+      - TZ=UTC
+      # Usage: -u "username;password" -s "sharename;path;browsable;readonly;guest;users;admins;writelist;comment"
+      - USER=balena;balena
+      - SHARE=nodered;/shares/nodered;yes;no;no;balena;balena
+      - SHARE2=influxdb;/shares/influxdb;yes;no;no;balena;balena
+      - SHARE3=grafana;/shares/grafana;yes;no;no;balena;balena
+      - SHARE4=homeassistant;/shares/homeassistant;yes;no;no;balena;balena
+      - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;balena;balena
+    volumes:
+      - 'nodered-data:/shares/nodered'
+      - 'influxdb-data:/shares/influxdb'
+      - 'grafana-data:/shares/grafana'
+      - 'homeassistant-data:/shares/homeassistant'
+      - 'jupyterlab-data:/shares/jupyterlab'
+      - 'samba-data:/config'
+    ports:
+      - "139:139"
+      - "445:445"
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy
