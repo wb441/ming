@@ -1,13 +1,10 @@
 FROM --platform=linux/%%BALENA_ARCH%% linuxserver/swag:latest
 
 # Copy nginx proxy configuration files
-COPY homeassistant.subfolder.conf /defaults/proxy-confs/
 COPY nodered.subfolder.conf /defaults/proxy-confs/
 COPY grafana.subfolder.conf /defaults/proxy-confs/
 COPY influxdb.subfolder.conf /defaults/proxy-confs/
 COPY jupyterlab.subfolder.conf /defaults/proxy-confs/
-COPY duplicati.subfolder.conf /defaults/proxy-confs/
-COPY roconmqtt.subfolder.conf /defaults/proxy-confs/
 
 # Expose ports
 EXPOSE 80 443
