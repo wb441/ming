@@ -83,6 +83,7 @@ services:
       - './swag/influxdb.subfolder.conf:/config/nginx/proxy-confs/influxdb.subfolder.conf'
       - './swag/jupyterlab.subfolder.conf:/config/nginx/proxy-confs/jupyterlab.subfolder.conf'
       - './swag/duplicati.subfolder.conf:/config/nginx/proxy-confs/duplicati.subfolder.conf'
+      - './swag/roconmqtt.subfolder.conf:/config/nginx/proxy-confs/roconmqtt.subfolder.conf'
     ports:
       - "80:80"
       - "443:443"
@@ -104,6 +105,53 @@ services:
       - 'jupyterlab-data:/source/jupyterlab:ro'
     ports:
       - "8200:8200"
+  setup-can:
+    image: alpine:latest
+    network_mode: host
+    privileged: true
+    restart: "no"
+    command: >
+      sh -c "
+      echo 'Setting up CAN interface...';
+      if ! ip link show can0 > /dev/null 2>&1; then
+        echo 'WARNING: can0 interface not found. Ensure the MCP2515 device tree overlay is loaded via Balena config.';
+        echo 'Set BALENA_HOST_CONFIG_dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25';
+        exit 0;
+      fi;
+      ip link set can0 type can bitrate 20000;
+      ip link set can0 up;
+      echo 'CAN interface can0 is up with bitrate 20000';
+      "
+  roconmqtt:
+    restart: always
+    build: ./rotex-rocon2mqtt
+    network_mode: host
+    depends_on:
+      - setup-can
+      - mosquitto
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5000
+      - Can__MachineType=EHSHXXPXXA
+      - Can__CanInterfaceName=can0
+      - Can__TimeZoneId=Europe/Brussels
+      - Mqtt__Enabled=true
+      - Mqtt__Host=mosquitto
+      - Mqtt__Port=1883
+      - Mqtt__UseTls=false
+      - Mqtt__ClientId=rocon-mqtt
+      - Mqtt__Username=
+      - Mqtt__Password=
+      - Mqtt__KeepAlivePeriodSeconds=30
+      - Mqtt__Topic=rocon
+      - Mqtt__ChangeThresholdPercent=2.0
+      - Mqtt__TimeZoneId=Europe/Brussels
+      - Mqtt__PollingIntervalSeconds=30
+      - Mqtt__ResponseTimeoutSeconds=5
+      - Mqtt__HomeAssistant__Discovery=true
+      - Mqtt__HomeAssistant__DiscoveryPrefix=homeassistant
+    ports:
+      - "5000:5000"
   duckdns:
     restart: always
     build: ./duckdns
