@@ -12,6 +12,7 @@ volumes:
     matter-server-data:
     duckdns-data:
     samba-data:
+    portainer-data:
 services:
   nodered:
     restart: always
@@ -35,8 +36,6 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     ports:
       - "3000:3000"
     volumes:
@@ -63,6 +62,18 @@ services:
       - "8123:8123" 
     volumes:
       - 'homeassistant-data:/config'
+  duplicati:
+    restart: always
+    build: ./duplicati
+    ports:
+      - "8200:8200"
+    volumes:
+      - 'duplicati-data:/config'
+      - 'nodered-data:/source/nodered:ro'
+      - 'influxdb-data:/source/influxdb:ro'
+      - 'grafana-data:/source/grafana:ro'
+      - 'homeassistant-data:/source/homeassistant:ro'
+      - 'jupyterlab-data:/source/jupyterlab:ro'
   swag:
     restart: always
     build: ./swag
@@ -72,8 +83,9 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - URL=yourdomain.com
+      - URL=hostname.local
       - VALIDATION=http
+      - SUBDOMAINS=wildcard
       - ONLY_SUBDOMAINS=false
       - STAGING=false # Set to true for testing SSL certificates
     volumes:
@@ -182,6 +194,7 @@ services:
       - SHARE8=redis;/shares/redis;yes;no;no;balena;balena
       - SHARE9=duckdns;/shares/duckdns;yes;no;no;balena;balena
       - SHARE10=matter-server;/shares/matter-server;yes;no;no;balena;balena
+      - SHARE11=portainer;/shares/portainer;yes;no;no;balena;balena
     volumes:
       - 'nodered-data:/shares/nodered'
       - 'influxdb-data:/shares/influxdb'
@@ -193,10 +206,20 @@ services:
       - 'redis-data:/shares/redis'
       - 'duckdns-data:/shares/duckdns'
       - 'matter-server-data:/shares/matter-server'
+      - 'portainer-data:/shares/portainer'
       - 'samba-data:/config'
     ports:
       - "139:139"
       - "445:445"
+  portainer:
+    restart: always
+    build: ./portainer
+    volumes:
+      - 'portainer-data:/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - "9000:9000"
+      - "8000:8000"
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy
