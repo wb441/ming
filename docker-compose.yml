@@ -83,9 +83,10 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - URL=${BALENA_DEVICE_UUID}.local
-      - VALIDATION=http
+      - URL=yourdomain.duckdns.org
+      - VALIDATION=duckdns
       - SUBDOMAINS=wildcard
+      - DUCKDNSTOKEN=your-duckdns-token
       - ONLY_SUBDOMAINS=false
       - STAGING=false # Set to true for testing SSL certificates
     volumes:
