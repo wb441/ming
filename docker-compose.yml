@@ -83,7 +83,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - URL=hostname.local
+      - URL=${BALENA_DEVICE_UUID}.local
       - VALIDATION=http
       - SUBDOMAINS=wildcard
       - ONLY_SUBDOMAINS=false
