@@ -80,18 +80,23 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
+      # Common settings
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - URL=localhost
-      - VALIDATION=http
       - SUBDOMAINS=wildcard
       - ONLY_SUBDOMAINS=false
-      - STAGING=true # Set to true for testing SSL certificates (use false for production)
-      # For production with DuckDNS, change to:
+      
+      # STAGING/TESTING: Use these settings for testing without a real domain
+      - URL=localhost
+      - CERTPROVIDER=
+      - VALIDATION=
+      
+      # PRODUCTION: Uncomment these and replace with your actual DuckDNS domain/token
       # - URL=yourdomain.duckdns.org
       # - VALIDATION=duckdns
       # - DUCKDNSTOKEN=your-duckdns-token
+      # - CERTPROVIDER=letsencrypt
     volumes:
       - 'swag-data:/config'
     ports:
