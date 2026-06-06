@@ -87,6 +87,15 @@ services:
       - SUBDOMAINS=wildcard
       - ONLY_SUBDOMAINS=false
       
+      # Subdomain enable/disable flags (defaults to true if not specified)
+      - ENABLE_HOMEASSISTANT=false
+      - ENABLE_GRAFANA=false
+      - ENABLE_INFLUXDB=false
+      - ENABLE_NODERED=false
+      - ENABLE_JUPYTERLAB=false
+      - ENABLE_DUPLICATI=false
+      - ENABLE_PORTAINER=false
+      
       # STAGING/TESTING: Use these settings for testing without a real domain
       - URL=localhost
       - CERTPROVIDER=

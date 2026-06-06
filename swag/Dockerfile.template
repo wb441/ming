@@ -9,15 +9,12 @@ COPY homeassistant.subdomain.conf /defaults/proxy-confs/
 COPY duplicati.subdomain.conf /defaults/proxy-confs/
 COPY portainer.subdomain.conf /defaults/proxy-confs/
 
-# Also copy to config so they're available immediately after container start
-RUN mkdir -p /config/nginx/proxy-confs/
-COPY grafana.subdomain.conf /config/nginx/proxy-confs/
-COPY influxdb.subdomain.conf /config/nginx/proxy-confs/
-COPY jupyterlab.subdomain.conf /config/nginx/proxy-confs/
-COPY nodered.subdomain.conf /config/nginx/proxy-confs/
-COPY homeassistant.subdomain.conf /config/nginx/proxy-confs/
-COPY duplicati.subdomain.conf /config/nginx/proxy-confs/
-COPY portainer.subdomain.conf /config/nginx/proxy-confs/
+# Copy custom entrypoint script for conditional subdomain loading
+COPY entrypoint.sh /custom-entrypoint.sh
+RUN chmod +x /custom-entrypoint.sh
+
+# Override entrypoint to use our custom script
+ENTRYPOINT ["/custom-entrypoint.sh"]
 
 # Expose ports
 EXPOSE 80 443

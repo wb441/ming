@@ -26,26 +26,98 @@ Each of these applications is built and runs in its own container on an embedded
 
 ## Accessing Services
 
-All web services are accessible through the SWAG reverse proxy at the following subdirectories:
+All web services are accessible through the SWAG reverse proxy via subdomains:
 
-- Home Assistant: `https://yourdomain.com/homeassistant/`
-- Node-RED: `https://yourdomain.com/nodered/`
-- Grafana: `https://yourdomain.com/grafana/`
-- InfluxDB: `https://yourdomain.com/influxdb/`
-- JupyterLab: `https://yourdomain.com/jupyterlab/`
-- Duplicati: `https://yourdomain.com/duplicati/`
+- Home Assistant: `https://homeassistant.yourdomain.com/` (or via subdomain config)
+- Node-RED: `https://nodered.yourdomain.com/`
+- Grafana: `https://grafana.yourdomain.com/`
+- InfluxDB: `https://influxdb.yourdomain.com/`
+- JupyterLab: `https://jupyterlab.yourdomain.com/`
+- Duplicati: `https://duplicati.yourdomain.com/`
+- Portainer: `https://portainer.yourdomain.com/`
 
 Services are also accessible directly via their individual ports if needed.
+
+### Testing Subdomains Locally
+
+When testing locally without a real domain, you have several options:
+
+1. **Using UniFi Gateway DNS** (Recommended)
+   - Add local DNS A records in your UniFi gateway pointing subdomains to your device IP
+   - Example: `homeassistant.local` → `192.168.0.15`
+   - Then access via browser normally: `https://homeassistant.local/`
+
+2. **Using Windows hosts file**
+   - Edit `C:\Windows\System32\drivers\etc\hosts` and add:
+     ```
+     192.168.0.15  homeassistant.local
+     192.168.0.15  nodered.local
+     192.168.0.15  grafana.local
+     ```
+   - Access via browser: `https://homeassistant.local/` (accept SSL warning for self-signed cert)
+
+3. **Using curl with Host headers**
+   - `curl -k -H "Host: homeassistant.local" https://192.168.0.15/`
 
 # Configuration
 
 ## SWAG Reverse Proxy Setup
 
-Before deploying, you'll need to configure SWAG in [`docker-compose.yml`](docker-compose.yml):
+SWAG provides SSL/TLS encrypted access to all web services via subdomains. Configuration is handled via environment variables in `docker-compose.yml`.
 
-1. Set your domain: Change `URL=yourdomain.com` to your actual domain
-2. Configure validation method: Set `VALIDATION` to your preferred method (http, dns, etc.)
-3. For SSL certificates, you may need to configure additional DNS or port forwarding settings
+### Testing Configuration (HTTP, self-signed certificate)
+
+The default configuration uses self-signed certificates for testing:
+
+```yaml
+environment:
+  - URL=localhost
+  - CERTPROVIDER=
+  - VALIDATION=
+```
+
+This mode:
+- Uses self-signed certificates (warning in browser is normal)
+- Works with local testing via UniFi DNS, hosts file, or curl
+- No external domain or certificate validation needed
+
+### Production Configuration (Let's Encrypt with DuckDNS)
+
+To use production SSL certificates, update the environment variables:
+
+```yaml
+environment:
+  - URL=yourdomain.duckdns.org
+  - VALIDATION=duckdns
+  - DUCKDNSTOKEN=your-duckdns-token
+  - CERTPROVIDER=letsencrypt
+```
+
+Then:
+1. Set `DUCKDNSTOKEN` to your actual DuckDNS token
+2. Ensure port forwarding is configured for ports 80/443
+3. Set `STAGING=false` for production certificates (after testing)
+
+### Enabling/Disabling Individual Subdomains
+
+Each subdomain proxy can be enabled or disabled via environment variables in `docker-compose.yml`:
+
+```yaml
+environment:
+  - ENABLE_HOMEASSISTANT=true
+  - ENABLE_GRAFANA=true
+  - ENABLE_INFLUXDB=true
+  - ENABLE_NODERED=true
+  - ENABLE_JUPYTERLAB=true
+  - ENABLE_DUPLICATI=true
+  - ENABLE_PORTAINER=true
+```
+
+Set to `false` to disable any service. This is useful for testing or when services aren't deployed. Restart SWAG after changes:
+
+```bash
+balena restart <device-uuid> swag
+```
 
 ## Home Assistant Configuration
 
@@ -138,6 +210,23 @@ Balena.io will build and deploy the containers to your target.
 It's that easy!
 
 ## Configure via [environment variables](https://docs.resin.io/management/env-vars/)
+
+### SWAG Configuration
+Variable Name | Value | Description | Default
+------------ | ------------- | ------------- | -------------
+**`URL`** | `STRING` | Domain name (e.g., yourdomain.duckdns.org) | localhost
+**`VALIDATION`** | `http`, `duckdns`, or empty | Certificate validation method | (empty for self-signed)
+**`DUCKDNSTOKEN`** | `STRING` | DuckDNS token for DNS validation | (not set)
+**`CERTPROVIDER`** | `letsencrypt` or empty | Certificate provider | (empty for self-signed)
+**`ENABLE_HOMEASSISTANT`** | `true` or `false` | Enable Home Assistant subdomain | true
+**`ENABLE_GRAFANA`** | `true` or `false` | Enable Grafana subdomain | true
+**`ENABLE_INFLUXDB`** | `true` or `false` | Enable InfluxDB subdomain | true
+**`ENABLE_NODERED`** | `true` or `false` | Enable Node-RED subdomain | true
+**`ENABLE_JUPYTERLAB`** | `true` or `false` | Enable JupyterLab subdomain | true
+**`ENABLE_DUPLICATI`** | `true` or `false` | Enable Duplicati subdomain | true
+**`ENABLE_PORTAINER`** | `true` or `false` | Enable Portainer subdomain | true
+
+### Other Services
 Variable Name | Value | Description | Default
 ------------ | ------------- | ------------- | -------------
 **`JUPYTER_MING_PASS`** | `STRING` | the password Jupyter Labs will start up with | mingstack
@@ -165,16 +254,28 @@ If you run into problems just try pinging to the local IP address you see on the
 
 With connectivity working you can now take a look at the servers running on the target.
 
-## Through SWAG Reverse Proxy (Recommended)
+## Through SWAG Reverse Proxy (Recommended for Production)
 
-Access all services securely through SWAG at https://e844144.local/ (or your configured domain):
+Access all services securely through SWAG via subdomains (requires domain setup):
 
-- Home Assistant: https://e844144.local/homeassistant/
-- Node-RED: https://e844144.local/nodered/
-- Grafana: https://e844144.local/grafana/ (default password: admin, admin)
-- InfluxDB: https://e844144.local/influxdb/
-- JupyterLab: https://e844144.local/jupyterlab/
-- Duplicati: https://e844144.local/duplicati/
+- Home Assistant: `https://homeassistant.yourdomain.com/`
+- Node-RED: `https://nodered.yourdomain.com/`
+- Grafana: `https://grafana.yourdomain.com/` (default password: admin, admin)
+- InfluxDB: `https://influxdb.yourdomain.com/`
+- JupyterLab: `https://jupyterlab.yourdomain.com/`
+- Duplicati: `https://duplicati.yourdomain.com/`
+- Portainer: `https://portainer.yourdomain.com/`
+
+## For Testing (Local Access)
+
+When testing with a self-signed certificate, access via:
+- Base URL: `https://e844144.local/` or `https://192.168.0.228/`
+- Note: Browser will show SSL warning (expected for self-signed certificates)
+
+To access specific subdomains locally:
+1. Set up DNS records in UniFi gateway (recommended)
+2. Or add entries to Windows hosts file
+3. Or use curl with Host headers (see "Testing Subdomains Locally" section in README)
 
 ## Direct Port Access
 
@@ -193,6 +294,47 @@ You can also access services directly via their ports:
 - InfluxDB: http://e844144.local:8086
 - Duplicati: http://e844144.local:8200
 - Mosquitto MQTT: tcp://e844144.local:1883
+
+# Known Issues & Troubleshooting
+
+## Services Not Responding Through SWAG
+
+**Symptom**: `Connection refused` on port 80/443
+
+**Solutions**:
+1. Verify SWAG is running: `balena logs <device-uuid> -s swag`
+2. Check certificate generation succeeded (look for errors in logs)
+3. For testing, ensure `VALIDATION` and `CERTPROVIDER` are empty or set to `http`
+4. Verify upstream services are running and responding on their ports
+
+## Subdomain DNS Not Resolving
+
+**Symptom**: `DNS_PROBE_FINISHED_NXDOMAIN` when accessing subdomains
+
+**Solutions**:
+1. Set up DNS A records in UniFi gateway (recommended)
+2. Use Windows hosts file entries
+3. Use curl with Host headers for testing
+4. For production, ensure DuckDNS domain is properly configured
+
+## CAN Interface Errors (roconmqtt/setup-can crashing)
+
+**Symptom**: Services repeatedly crashing if CAN hardware isn't present
+
+**Solution**: This is expected behavior - `setup-can` and `roconmqtt` are set to `restart: no` so they exit gracefully when hardware is unavailable. They won't continuously restart.
+
+To manually start them once hardware is available:
+```bash
+balena start <device-uuid> roconmqtt
+```
+
+## Service Crashes on Startup
+
+**Common causes**:
+- Check logs for the specific service: `balena logs <device-uuid> -s <service-name>`
+- Verify all volumes have proper permissions
+- For SWAG: ensure nginx config syntax is valid
+- Restart SWAG after disabling subdomains: `balena restart <device-uuid> swag`
 
 # Maintainer / Contributors
 
