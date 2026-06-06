@@ -98,8 +98,8 @@ services:
       
       # STAGING/TESTING: Use these settings for testing without a real domain
       - URL=localhost
-      - CERTPROVIDER=
       - VALIDATION=none
+      - CERTPROVIDER=
       
       # PRODUCTION: Uncomment these and replace with your actual DuckDNS domain/token
       # - URL=yourdomain.duckdns.org
