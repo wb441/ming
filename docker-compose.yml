@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 volumes:
     influxdb-data:
     nodered-data:
@@ -13,11 +13,6 @@ volumes:
     duckdns-data:
     samba-data:
     portainer-data:
-
-networks:
-  default:
-    driver: bridge
-
 services:
   nodered:
     restart: always
