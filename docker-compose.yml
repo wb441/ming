@@ -115,6 +115,9 @@ services:
     network_mode: host
     privileged: true
     restart: no
+    #restart: on-failure
+    #restart_policy:
+    #  max_retries: 3
     command: >
       sh -c "
       apk add --no-cache iproute2 can-utils;
@@ -138,6 +141,9 @@ services:
       "
   roconmqtt:
     restart: no
+    #restart: on-failure
+    #restart_policy:
+    #  max_retries: 3
     build: ./rotex-rocon2mqtt
     privileged: true
     depends_on:
