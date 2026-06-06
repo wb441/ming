@@ -65,6 +65,10 @@ services:
   duplicati:
     restart: always
     build: ./duplicati
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
     ports:
       - "8200:8200"
     volumes:

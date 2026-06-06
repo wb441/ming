@@ -65,6 +65,18 @@ When testing locally without a real domain, you have several options:
 
 # Configuration
 
+## Duplicati
+
+The minimal configuration needed:
+
+```yaml
+environment:
+  - SETTINGS_ENCRYPTION_KEY=duplicati
+  - PASSWORD=password
+```
+
+when changing these, you need to purge the data.
+
 ## SWAG Reverse Proxy Setup
 
 SWAG provides SSL/TLS encrypted access to all web services via subdomains. Configuration is handled via environment variables in `docker-compose.yml`.
@@ -79,6 +91,8 @@ environment:
   - CERTPROVIDER=
   - VALIDATION=
 ```
+
+when changing these, you need to purge the data.
 
 This mode:
 - Uses self-signed certificates (warning in browser is normal)
@@ -101,6 +115,8 @@ Then:
 1. Set `DUCKDNSTOKEN` to your actual DuckDNS token
 2. Ensure port forwarding is configured for ports 80/443
 3. Set `STAGING=false` for production certificates (after testing)
+
+when changing these, you need to purge the data.
 
 ### Enabling/Disabling Individual Subdomains
 
