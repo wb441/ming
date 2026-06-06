@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 volumes:
     influxdb-data:
     nodered-data:
@@ -13,6 +13,11 @@ volumes:
     duckdns-data:
     samba-data:
     portainer-data:
+
+networks:
+  default:
+    driver: bridge
+
 services:
   nodered:
     restart: always
@@ -88,7 +93,7 @@ services:
       - SUBDOMAINS=wildcard
       - DUCKDNSTOKEN=your-duckdns-token
       - ONLY_SUBDOMAINS=false
-      - STAGING=false # Set to true for testing SSL certificates
+      - STAGING=true # Set to true for testing SSL certificates (use false for production)
     volumes:
       - 'swag-data:/config'
     ports:
@@ -96,6 +101,12 @@ services:
       - "443:443"
     depends_on:
       - homeassistant
+      - grafana
+      - influxdb
+      - jupyterlab
+      - nodered
+      - duplicati
+      - portainer
   setup-can:
     image: alpine:latest
     network_mode: host
@@ -125,7 +136,7 @@ services:
   roconmqtt:
     restart: always
     build: ./rotex-rocon2mqtt
-    network_mode: host
+    privileged: true
     depends_on:
       - setup-can
       - mosquitto
@@ -152,6 +163,8 @@ services:
       - Mqtt__HomeAssistant__DiscoveryPrefix=homeassistant
     ports:
       - "5000:5000"
+    # NOTE: Removed network_mode: host to allow service name resolution for mosquitto
+    # If CAN interface access is needed, use privileged: true instead
   duckdns:
     restart: always
     build: ./duckdns
