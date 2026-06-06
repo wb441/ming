@@ -1,6 +1,6 @@
 FROM --platform=linux/%%BALENA_ARCH%% linuxserver/swag:latest
 
-# Copy nginx proxy configuration files
+# Copy nginx proxy configuration files to defaults for first-time setup
 COPY grafana.subdomain.conf /defaults/proxy-confs/
 COPY influxdb.subdomain.conf /defaults/proxy-confs/
 COPY jupyterlab.subdomain.conf /defaults/proxy-confs/
@@ -8,6 +8,16 @@ COPY nodered.subdomain.conf /defaults/proxy-confs/
 COPY homeassistant.subdomain.conf /defaults/proxy-confs/
 COPY duplicati.subdomain.conf /defaults/proxy-confs/
 COPY portainer.subdomain.conf /defaults/proxy-confs/
+
+# Also copy to config so they're available immediately after container start
+RUN mkdir -p /config/nginx/proxy-confs/
+COPY grafana.subdomain.conf /config/nginx/proxy-confs/
+COPY influxdb.subdomain.conf /config/nginx/proxy-confs/
+COPY jupyterlab.subdomain.conf /config/nginx/proxy-confs/
+COPY nodered.subdomain.conf /config/nginx/proxy-confs/
+COPY homeassistant.subdomain.conf /config/nginx/proxy-confs/
+COPY duplicati.subdomain.conf /config/nginx/proxy-confs/
+COPY portainer.subdomain.conf /config/nginx/proxy-confs/
 
 # Expose ports
 EXPOSE 80 443
