@@ -45,5 +45,9 @@ done
 
 echo "Subdomain configuration complete"
 
+# Replace placeholders in index.html
+sed -i "s/{{URL}}/$URL/g" /config/www/index.html
+sed -i "s/{{DIRECT_HOST}}/$DIRECT_HOST/g" /config/www/index.html
+
 # Call the original SWAG entrypoint
 exec /init

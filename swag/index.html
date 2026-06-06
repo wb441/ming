@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Services</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+    .card a {
+      display: block;
+      margin: 8px 0;
+      font-size: 16px;
+      color: #0078d4;
+      text-decoration: none;
+    }
+    .card a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<h1>My Services</h1>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>Home Assistant</h2>
+    <a href="https://homeassistant.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:8123">Direct (8123)</a>
+  </div>
+
+  <div class="card">
+    <h2>Node‑RED</h2>
+    <a href="https://nodered.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:1880">Direct (1880)</a>
+  </div>
+
+  <div class="card">
+    <h2>Grafana</h2>
+    <a href="https://grafana.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:3000">Direct (3000)</a>
+  </div>
+
+  <div class="card">
+    <h2>Duplicati</h2>
+    <a href="https://duplicati.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:8200">Direct (8200)</a>
+  </div>
+
+  <div class="card">
+    <h2>JupyterLab</h2>
+    <a href="https://jupyterlab.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:8888">Direct (8888)</a>
+  </div>
+
+  <div class="card">
+    <h2>Portainer</h2>
+    <a href="https://portainer.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:9000">Direct (9000)</a>
+  </div>
+  
+  <div class="card">
+    <h2>InfluxDB</h2>
+    <a href="https://influxdb.{{URL}}">Via SWAG</a>
+    <a href="http://{{DIRECT_HOST}}:8086">Direct (8086)</a>
+  </div>
+</div>
+</body>
+</html>

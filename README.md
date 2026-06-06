@@ -81,6 +81,14 @@ when changing these, you need to purge the data.
 
 SWAG provides SSL/TLS encrypted access to all web services via subdomains. Configuration is handled via environment variables in `docker-compose.yml`.
 
+### Normal environmental variables
+
+```yaml
+environment:
+  - ENABLE_HOMEASSISTANT=true #or other ones
+  - DIRECT_HOST=%%BALENA_DEVICE_UUID%%.local
+```
+
 ### Testing Configuration (HTTP, self-signed certificate)
 
 The default configuration uses self-signed certificates for testing:

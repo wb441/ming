@@ -1,5 +1,8 @@
 FROM --platform=linux/%%BALENA_ARCH%% linuxserver/swag:latest
 
+# Copy custom homepage
+COPY index.html /defaults/www/index.html
+
 # Copy nginx proxy configuration files to defaults for first-time setup
 COPY grafana.subdomain.conf /defaults/proxy-confs/
 COPY influxdb.subdomain.conf /defaults/proxy-confs/
