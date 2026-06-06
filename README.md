@@ -44,20 +44,24 @@ When testing locally without a real domain, you have several options:
 
 1. **Using UniFi Gateway DNS** (Recommended)
    - Add local DNS A records in your UniFi gateway pointing subdomains to your device IP
-   - Example: `homeassistant.local` → `192.168.0.15`
-   - Then access via browser normally: `https://homeassistant.local/`
+   - Add two records:
+     - **Type**: A, **Name**: `morningfrog.home.arpa`, **IP**: `192.168.0.15`
+     - **Type**: A, **Name**: `*.morningfrog.home.arpa`, **IP**: `192.168.0.15`
+   - (Replace `morningfrog.home.arpa` with your actual domain and `192.168.0.15` with your device IP)
+   - Then access via browser normally: `https://morningfrog.home.arpa/` and `https://homeassistant.morningfrog.home.arpa/`
 
 2. **Using Windows hosts file**
    - Edit `C:\Windows\System32\drivers\etc\hosts` and add:
      ```
-     192.168.0.15  homeassistant.local
-     192.168.0.15  nodered.local
-     192.168.0.15  grafana.local
+     192.168.0.15  morningfrog.home.arpa
+     192.168.0.15  homeassistant.morningfrog.home.arpa
+     192.168.0.15  nodered.morningfrog.home.arpa
+     192.168.0.15  grafana.morningfrog.home.arpa
      ```
-   - Access via browser: `https://homeassistant.local/` (accept SSL warning for self-signed cert)
+   - Access via browser: `https://morningfrog.home.arpa/` (accept SSL warning for self-signed cert)
 
 3. **Using curl with Host headers**
-   - `curl -k -H "Host: homeassistant.local" https://192.168.0.15/`
+   - `curl -k -H "Host: homeassistant.morningfrog.home.arpa" https://192.168.0.15/`
 
 # Configuration
 
