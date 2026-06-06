@@ -83,12 +83,15 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
-      - URL=yourdomain.duckdns.org
-      - VALIDATION=duckdns
+      - URL=localhost
+      - VALIDATION=http
       - SUBDOMAINS=wildcard
-      - DUCKDNSTOKEN=your-duckdns-token
       - ONLY_SUBDOMAINS=false
       - STAGING=true # Set to true for testing SSL certificates (use false for production)
+      # For production with DuckDNS, change to:
+      # - URL=yourdomain.duckdns.org
+      # - VALIDATION=duckdns
+      # - DUCKDNSTOKEN=your-duckdns-token
     volumes:
       - 'swag-data:/config'
     ports:
