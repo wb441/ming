@@ -274,7 +274,7 @@ services:
       # Balena variables (recommended)
       #- SERVERURL=yourdomain.duckdns.org # public ip / dns
       #- SERVERPORT=51820 # server port
-      - PEERS=3 # number of peers to create configs for (default: 5)
+      - PEERS=5 # number of peers to create configs for (default: 5)
       - PEERDNS=1.1.1.1 # DNS servers for peers
       - INTERNAL_SUBNET=10.13.13.0 # internal subnet for WireGuard network
 
