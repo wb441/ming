@@ -1,0 +1,1 @@
+FROM --platform=linux/%%BALENA_ARCH%% linuxserver/wireguard:latest

@@ -13,6 +13,7 @@ volumes:
     duckdns-data:
     samba-data:
     portainer-data:
+    wireguard-data:
 services:
   nodered:
     restart: always
@@ -199,11 +200,11 @@ services:
     volumes:
       - 'duckdns-data:/config'
   matter-server:
-    restart: always
-    build: ./matter-server
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
     network_mode: host
+    restart: always
     volumes:
-      - 'matter-server-data:/data'
+      - matter-server-data:/data
   redis:
     restart: always
     build: ./redis
@@ -219,18 +220,19 @@ services:
       - GROUPID=1000
       - TZ=UTC
       # Usage: -u "username;password" -s "sharename;path;browsable;readonly;guest;users;admins;writelist;comment"
-      - USER=balena;balena
-      - SHARE=nodered;/shares/nodered;yes;no;no;balena;balena
-      - SHARE2=influxdb;/shares/influxdb;yes;no;no;balena;balena
-      - SHARE3=grafana;/shares/grafana;yes;no;no;balena;balena
-      - SHARE4=homeassistant;/shares/homeassistant;yes;no;no;balena;balena
-      - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;balena;balena
-      - SHARE6=swag;/shares/swag;yes;no;no;balena;balena
-      - SHARE7=duplicati;/shares/duplicati;yes;no;no;balena;balena
-      - SHARE8=redis;/shares/redis;yes;no;no;balena;balena
-      - SHARE9=duckdns;/shares/duckdns;yes;no;no;balena;balena
-      - SHARE10=matter-server;/shares/matter-server;yes;no;no;balena;balena
-      - SHARE11=portainer;/shares/portainer;yes;no;no;balena;balena
+      - USER=${SMB_USER};${SMB_PASSWORD}
+      - SHARE=nodered;/shares/nodered;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE2=influxdb;/shares/influxdb;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE3=grafana;/shares/grafana;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE4=homeassistant;/shares/homeassistant;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE6=swag;/shares/swag;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE7=duplicati;/shares/duplicati;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE8=redis;/shares/redis;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE9=duckdns;/shares/duckdns;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE10=matter-server;/shares/matter-server;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE11=portainer;/shares/portainer;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE12=wireguard;/shares/wireguard;yes;no;no;${SMB_USER};${SMB_USER}
     volumes:
       - 'nodered-data:/shares/nodered'
       - 'influxdb-data:/shares/influxdb'
@@ -243,6 +245,7 @@ services:
       - 'duckdns-data:/shares/duckdns'
       - 'matter-server-data:/shares/matter-server'
       - 'portainer-data:/shares/portainer'
+      - 'wireguard-data:/shares/wireguard'
       - 'samba-data:/config'
     ports:
       - "139:139"
@@ -256,6 +259,35 @@ services:
     ports:
       - "9000:9000"
       - "8000:8000"
+  wireguard:
+    image: linuxserver/wireguard
+    container_name: wireguard
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Brussels
+
+      # Balena variables (recommended)
+      #- SERVERURL=yourdomain.duckdns.org # public ip / dns
+      #- SERVERPORT=51820 # server port
+      - PEERS=3 # number of peers to create configs for (default: 5)
+      - PEERDNS=1.1.1.1 # DNS servers for peers
+      - INTERNAL_SUBNET=10.13.13.0 # internal subnet for WireGuard network
+
+    volumes:
+      - wireguard-data:/config
+      - /lib/modules:/lib/modules:ro
+
+    #sysctls:
+    #  - net.ipv4.ip_forward=1
+    #  - net.ipv6.conf.all.forwarding=1
+
+    restart: always
+
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy

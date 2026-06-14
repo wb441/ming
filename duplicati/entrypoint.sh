@@ -5,7 +5,6 @@ DB="/config/Duplicati-server.sqlite"
 if [ -n "$DUPLICATI_PASSWORD" ]; then
     echo "Setting Duplicati password from environment variable"
 
-    # Remove old DB if password is unknown
     if [ ! -f "$DB" ]; then
         echo "No server DB found, creating new one"
     else
@@ -14,5 +13,8 @@ if [ -n "$DUPLICATI_PASSWORD" ]; then
     fi
 fi
 
-# Start Duplicati normally
-exec /usr/bin/duplicati-server --webservice-password="$DUPLICATI_PASSWORD" --webservice-interface=any
+# Give the filesystem a moment to settle before s6 starts Duplicati
+sleep 2
+
+# Do NOT start Duplicati manually — s6 will do it
+exit 0
