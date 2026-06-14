@@ -73,12 +73,21 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - 'duplicati-data:/config'
-      - 'nodered-data:/source/nodered:ro'
-      - 'influxdb-data:/source/influxdb:ro'
-      - 'grafana-data:/source/grafana:ro'
-      - 'homeassistant-data:/source/homeassistant:ro'
-      - 'jupyterlab-data:/source/jupyterlab:ro'
+      - duplicati-data:/config
+
+      # Mount all service volumes as read-only
+      - nodered-data:/source/nodered:ro
+      - influxdb-data:/source/influxdb:ro
+      - grafana-data:/source/grafana:ro
+      - homeassistant-data:/source/homeassistant:ro
+      - jupyterlab-data:/source/jupyterlab:ro
+      - swag-data:/source/swag:ro
+      - duplicati-data:/source/duplicati:ro
+      - redis-data:/source/redis:ro
+      - duckdns-data:/source/duckdns:ro
+      - matter-server-data:/source/matter-server:ro
+      - portainer-data:/source/portainer:ro
+      - wireguard-data:/source/wireguard:ro
   swag:
     restart: always
     build: ./swag
@@ -277,6 +286,10 @@ services:
       - PEERS=5 # number of peers to create configs for (default: 5)
       - PEERDNS=1.1.1.1 # DNS servers for peers
       - INTERNAL_SUBNET=10.13.13.0 # internal subnet for WireGuard network
+
+      # Enable full LAN access for connected clients
+      - POSTUP=iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+      - POSTDOWN=iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
     volumes:
       - wireguard-data:/config
