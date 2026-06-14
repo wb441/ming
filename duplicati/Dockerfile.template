@@ -1,7 +1,1 @@
 FROM --platform=linux/%%BALENA_ARCH%% linuxserver/duplicati:latest
-
-COPY entrypoint.sh /custom-entrypoint.sh
-RUN chmod +x /custom-entrypoint.sh
-
-ENTRYPOINT ["/init"]
-CMD ["/custom-entrypoint.sh"]

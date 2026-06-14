@@ -93,15 +93,7 @@ when changing these, you need to purge the data.
 
 ## Duplicati
 
-The minimal configuration needed:
-
-```yaml
-environment:
-  - SETTINGS_ENCRYPTION_KEY=duplicati
-  - PASSWORD=password
-```
-
-when changing these, you need to purge the data.
+The default duplicati password is "changeme"
 
 ## SWAG Reverse Proxy Setup
 

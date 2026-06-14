@@ -1,6 +1,6 @@
 version: '2'
 volumes:
-    influxdb-data:
+    influxdb2-data:
     nodered-data:
     grafana-data:
     jupyterlab-data:
@@ -62,11 +62,19 @@ services:
       - "1880:1880"
   influxdb:
     restart: always
-    build: ./influxdb
+    build: ./influxdb2
     environment:
       - INFLUXDB_DB=ming_default
+      - INFLUXD_HTTP_BIND_ADDRESS=:8086
+      - INFLUXD_CONFIG_PATH=/etc/influxdb2/config.yml
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=home
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
+      - DOCKER_INFLUXDB_INIT_RETENTION=0
     volumes:
-      - 'influxdb-data:/var/lib/influxdb'
+      - 'influxdb2-data:/var/lib/influxdb2'
     ports:
       - "8086:8086"
   grafana:
@@ -115,7 +123,7 @@ services:
 
       # Mount all service volumes as read-only
       - nodered-data:/source/nodered:ro
-      - influxdb-data:/source/influxdb:ro
+      - influxdb2-data:/source/influxdb2:ro
       - grafana-data:/source/grafana:ro
       - homeassistant-data:/source/homeassistant:ro
       - jupyterlab-data:/source/jupyterlab:ro
@@ -269,7 +277,7 @@ services:
       # Usage: -u "username;password" -s "sharename;path;browsable;readonly;guest;users;admins;writelist;comment"
       - USER=${SMB_USER};${SMB_PASSWORD}
       - SHARE=nodered;/shares/nodered;yes;no;no;${SMB_USER};${SMB_USER}
-      - SHARE2=influxdb;/shares/influxdb;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE2=influxdb2;/shares/influxdb2;yes;no;no;${SMB_USER};${SMB_USER}
       - SHARE3=grafana;/shares/grafana;yes;no;no;${SMB_USER};${SMB_USER}
       - SHARE4=homeassistant;/shares/homeassistant;yes;no;no;${SMB_USER};${SMB_USER}
       - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;${SMB_USER};${SMB_USER}
@@ -282,7 +290,7 @@ services:
       - SHARE12=wireguard;/shares/wireguard;yes;no;no;${SMB_USER};${SMB_USER}
     volumes:
       - 'nodered-data:/shares/nodered'
-      - 'influxdb-data:/shares/influxdb'
+      - 'influxdb2-data:/shares/influxdb2'
       - 'grafana-data:/shares/grafana'
       - 'homeassistant-data:/shares/homeassistant'
       - 'jupyterlab-data:/shares/jupyterlab'
