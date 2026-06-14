@@ -112,7 +112,6 @@ SWAG provides SSL/TLS encrypted access to all web services via subdomains. Confi
 ```yaml
 environment:
   - ENABLE_HOMEASSISTANT=true #or other ones
-  - DIRECT_HOST=%%BALENA_DEVICE_UUID%%.local
 ```
 
 ### Testing Configuration (HTTP, self-signed certificate)
