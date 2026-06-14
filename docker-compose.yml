@@ -14,7 +14,45 @@ volumes:
     samba-data:
     portainer-data:
     wireguard-data:
+    argon-data:
 services:
+  setup-argon:
+    image: alpine:latest
+    network_mode: host
+    privileged: true
+    restart: no
+    volumes:
+      - argon-data:/argon
+    command: >
+      sh -c "
+        apk add --no-cache curl python3;
+  
+        echo 'Checking for Argon ONE fan control files...';
+  
+        if [ ! -f /argon/argononed.py ] || [ ! -f /argon/argononed.conf ]; then
+          echo 'Downloading Argon ONE installer...';
+          curl -L https://download.argon40.com/argon1.sh -o /tmp/argon1.sh;
+          chmod +x /tmp/argon1.sh;
+  
+          echo 'Extracting fan daemon...';
+          sed -n '/^cat << \"EOF\" > \/usr\/bin\/argononed.py/,/^EOF/p' /tmp/argon1.sh | sed '1d;$d' > /argon/argononed.py;
+  
+          echo 'Extracting fan config...';
+          sed -n '/^cat << \"EOF\" > \/etc\/argononed.conf/,/^EOF/p' /tmp/argon1.sh | sed '1d;$d' > /argon/argononed.conf;
+  
+          chmod +x /argon/argononed.py;
+  
+          echo 'Argon ONE fan control installed.';
+        else
+          echo 'Argon ONE fan control already installed.';
+        fi;
+  
+        echo 'Starting Argon ONE fan daemon...';
+        while true; do
+          python3 /argon/argononed.py
+          sleep 2
+        done
+      "
   nodered:
     restart: always
     build: ./nodered

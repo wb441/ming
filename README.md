@@ -65,6 +65,32 @@ When testing locally without a real domain, you have several options:
 
 # Configuration
 
+## Samba
+
+The minimal configuration needed:
+
+```yaml
+environment:
+  - SMB_USER=username
+  - SMB_PASSWORD=password
+```
+
+Then you can access all the other volumes with \\ipadres / \\uuid.local / \\arpa-dns-name
+
+## Wireguard
+
+The minimal configuration needed:
+
+```yaml
+environment:
+  - SERVERPORT=51820
+  - SERVERURL=morningfrog.home.arpa
+```
+
+The serverurl is the public dns / ip of the vpn server endpoint, and the serverport is the port to forward.
+
+when changing these, you need to purge the data.
+
 ## Duplicati
 
 The minimal configuration needed:
