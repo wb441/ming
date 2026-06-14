@@ -3,8 +3,9 @@
 echo "Running homepage rewrite..."
 
 # Compute DIRECT_HOST dynamically
-if [ -n "$BALENA_DEVICE_UUID_SHORT" ]; then
-    DIRECT_HOST="${BALENA_DEVICE_UUID_SHORT:0:7}.local"
+if [ -n "$BALENA_DEVICE_UUID" ]; then
+    SHORT_UUID="${BALENA_DEVICE_UUID:0:7}"
+    DIRECT_HOST="${SHORT_UUID}.local"
 else
     DIRECT_HOST="$(hostname).local"
 fi
