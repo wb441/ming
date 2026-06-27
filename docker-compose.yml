@@ -15,6 +15,7 @@ volumes:
     portainer-data:
     wireguard-data:
     argon-data:
+    z2m-data:
 services:
   setup-argon:
     image: alpine:latest
@@ -267,6 +268,17 @@ services:
       - 'redis-data:/data'
     ports:
       - "6379:6379"
+  z2m:
+    build: ./z2m
+    restart: always
+    volumes:
+      - 'z2m-data:/app/data'
+    ports:
+      - "8080:8080"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"    
+    environment:
+      - TZ=Europe/Berlin
   samba:
     restart: always
     build: ./samba
@@ -288,6 +300,8 @@ services:
       - SHARE10=matter-server;/shares/matter-server;yes;no;no;${SMB_USER};${SMB_USER}
       - SHARE11=portainer;/shares/portainer;yes;no;no;${SMB_USER};${SMB_USER}
       - SHARE12=wireguard;/shares/wireguard;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE13=z2m;/shares/z2m;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE14=rhasspy;/shares/rhasspy;yes;no;no;${SMB_USER};${SMB_USER}
     volumes:
       - 'nodered-data:/shares/nodered'
       - 'influxdb2-data:/shares/influxdb2'
@@ -302,6 +316,8 @@ services:
       - 'portainer-data:/shares/portainer'
       - 'wireguard-data:/shares/wireguard'
       - 'samba-data:/config'
+      - 'z2m-data:/shares/z2m'
+      - 'rhasspy-data:/shares/rhasspy'
     ports:
       - "139:139"
       - "445:445"
