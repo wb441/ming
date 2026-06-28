@@ -149,7 +149,7 @@ services:
       - ONLY_SUBDOMAINS=false
       
       # Subdomain enable/disable flags (defaults to true if not specified)
-      - ENABLE_HOMEASSISTANT=false
+      - ENABLE_HOMEASSISTANT=true
       - ENABLE_GRAFANA=false
       - ENABLE_INFLUXDB=false
       - ENABLE_NODERED=false
@@ -158,9 +158,9 @@ services:
       - ENABLE_PORTAINER=false
       
       # STAGING/TESTING: Use these settings for testing without a real domain
-      - URL=localhost
-      - VALIDATION=none
-      - CERTPROVIDER=
+      # - URL=localhost
+      # - VALIDATION=none
+      # - CERTPROVIDER=
       
       # PRODUCTION: Uncomment these and replace with your actual DuckDNS domain/token
       # - URL=yourdomain.duckdns.org
