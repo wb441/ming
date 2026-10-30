@@ -1,5 +1,10 @@
-FROM --platform=linux/%%BALENA_ARCH%% nodered/node-red:1.0.2
+FROM --platform=linux/%%BALENA_ARCH%% nodered/node-red:latest
 
-RUN npm install node-red-contrib-influxdb \
-                node-red-node-serialport \
-                node-red-dashboard
+USER root
+
+RUN npm install --unsafe-perm --no-update-notifier --no-fund --only=production \
+    node-red-contrib-influxdb \
+    node-red-node-serialport \
+    node-red-dashboard
+
+USER node-red

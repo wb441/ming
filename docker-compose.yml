@@ -1,12 +1,59 @@
-version: '2'
+version: "2.1"
 volumes:
-    influxdb-data:
+    influxdb2-data:
     nodered-data:
     grafana-data:
     jupyterlab-data:
     homeassistant-data:
     rhasspy-data:
+    swag-data:
+    duplicati-data:
+    redis-data:
+    matter-server-data:
+    duckdns-data:
+    samba-data:
+    portainer-data:
+    wireguard-data:
+    argon-data:
+    z2m-data:
 services:
+  setup-argon:
+    image: alpine:latest
+    network_mode: host
+    privileged: true
+    restart: no
+    volumes:
+      - argon-data:/argon
+    command: >
+      sh -c "
+        apk add --no-cache curl python3;
+  
+        echo 'Checking for Argon ONE fan control files...';
+  
+        if [ ! -f /argon/argononed.py ] || [ ! -f /argon/argononed.conf ]; then
+          echo 'Downloading Argon ONE installer...';
+          curl -L https://download.argon40.com/argon1.sh -o /tmp/argon1.sh;
+          chmod +x /tmp/argon1.sh;
+  
+          echo 'Extracting fan daemon...';
+          sed -n '/^cat << \"EOF\" > \/usr\/bin\/argononed.py/,/^EOF/p' /tmp/argon1.sh | sed '1d;$d' > /argon/argononed.py;
+  
+          echo 'Extracting fan config...';
+          sed -n '/^cat << \"EOF\" > \/etc\/argononed.conf/,/^EOF/p' /tmp/argon1.sh | sed '1d;$d' > /argon/argononed.conf;
+  
+          chmod +x /argon/argononed.py;
+  
+          echo 'Argon ONE fan control installed.';
+        else
+          echo 'Argon ONE fan control already installed.';
+        fi;
+  
+        echo 'Starting Argon ONE fan daemon...';
+        while true; do
+          python3 /argon/argononed.py
+          sleep 2
+        done
+      "
   nodered:
     restart: always
     build: ./nodered
@@ -16,11 +63,19 @@ services:
       - "1880:1880"
   influxdb:
     restart: always
-    build: ./influxdb
+    build: ./influxdb2
     environment:
       - INFLUXDB_DB=ming_default
+      - INFLUXD_HTTP_BIND_ADDRESS=:8086
+      - INFLUXD_CONFIG_PATH=/etc/influxdb2/config.yml
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=home
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
+      - DOCKER_INFLUXDB_INIT_RETENTION=0
     volumes:
-      - 'influxdb-data:/var/lib/influxdb'
+      - 'influxdb2-data:/var/lib/influxdb2'
     ports:
       - "8086:8086"
   grafana:
@@ -48,13 +103,243 @@ services:
       - "8888:8888"
     volumes:
       - 'jupyterlab-data:/data'
-#  homeassistant:
-#    restart: always
-#    build: ./homeassistant
-#    ports:
-#      - "8123:8123" 
-#    volumes:
-#      - 'homeassistant-data:/config'
+  homeassistant:
+    restart: always
+    build: ./homeassistant
+    ports:
+      - "8123:8123"
+    volumes:
+      - 'homeassistant-data:/config'
+  duplicati:
+    restart: always
+    build: ./duplicati
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    ports:
+      - "8200:8200"
+    volumes:
+      - duplicati-data:/config
+
+      # Mount all service volumes as read-only
+      - nodered-data:/source/nodered:ro
+      - influxdb2-data:/source/influxdb2:ro
+      - grafana-data:/source/grafana:ro
+      - homeassistant-data:/source/homeassistant:ro
+      - jupyterlab-data:/source/jupyterlab:ro
+      - swag-data:/source/swag:ro
+      - duplicati-data:/source/duplicati:ro
+      - redis-data:/source/redis:ro
+      - duckdns-data:/source/duckdns:ro
+      - matter-server-data:/source/matter-server:ro
+      - portainer-data:/source/portainer:ro
+      - wireguard-data:/source/wireguard:ro
+  swag:
+    restart: always
+    build: ./swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      # Common settings
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - SUBDOMAINS=wildcard
+      - ONLY_SUBDOMAINS=false
+      
+      # Subdomain enable/disable flags (defaults to true if not specified)
+      - ENABLE_HOMEASSISTANT=true
+      - ENABLE_GRAFANA=false
+      - ENABLE_INFLUXDB=false
+      - ENABLE_NODERED=false
+      - ENABLE_JUPYTERLAB=false
+      - ENABLE_DUPLICATI=false
+      - ENABLE_PORTAINER=false
+      
+      # STAGING/TESTING: Use these settings for testing without a real domain
+      # - URL=localhost
+      # - VALIDATION=none
+      # - CERTPROVIDER=
+      
+      # PRODUCTION: Uncomment these and replace with your actual DuckDNS domain/token
+      # - URL=yourdomain.duckdns.org
+      # - VALIDATION=duckdns
+      # - DUCKDNSTOKEN=your-duckdns-token
+      # - CERTPROVIDER=letsencrypt
+    volumes:
+      - 'swag-data:/config'
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - homeassistant
+      - grafana
+      - influxdb
+      - jupyterlab
+      - nodered
+      - duplicati
+      - portainer
+  setup-can:
+    image: alpine:latest
+    network_mode: host
+    privileged: true
+    restart: no
+    #restart: on-failure
+    #restart_policy:
+    #  max_retries: 3
+    command: >
+      sh -c "
+      apk add --no-cache iproute2 can-utils;
+      echo 'Setting up CAN interface...';
+      if ! ip link show can0 > /dev/null 2>&1; then
+        echo 'WARNING: can0 interface not found. Ensure the MCP2515 device tree overlay is loaded via Balena config.';
+        echo 'Set BALENA_HOST_CONFIG_dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25';
+        exit 0;
+      fi;
+      if ip -d link show can0 | grep -q 'bitrate 20000'; then
+        echo 'CAN interface can0 already configured with bitrate 20000';
+        ip link set can0 up 2>/dev/null || true;
+        echo 'CAN interface can0 is up';
+        exit 0;
+      fi;
+      ip link set dev can0 down 2>/dev/null || true;
+      sleep 1;
+      ip link set dev can0 type can bitrate 20000;
+      ip link set dev can0 up;
+      echo 'CAN interface can0 is up with bitrate 20000';
+      "
+  roconmqtt:
+    restart: no
+    #restart: on-failure
+    #restart_policy:
+    #  max_retries: 3
+    build: ./rotex-rocon2mqtt
+    privileged: true
+    depends_on:
+      - setup-can
+      - mosquitto
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Kestrel__Endpoints__Http__Url=http://0.0.0.0:5000
+      - Can__MachineType=EHSHXXPXXA
+      - Can__CanInterfaceName=can0
+      - Can__TimeZoneId=Europe/Brussels
+      - Mqtt__Enabled=true
+      - Mqtt__Host=mosquitto
+      - Mqtt__Port=1883
+      - Mqtt__UseTls=false
+      - Mqtt__ClientId=rocon-mqtt
+      - Mqtt__Username=
+      - Mqtt__Password=
+      - Mqtt__KeepAlivePeriodSeconds=30
+      - Mqtt__Topic=rocon
+      - Mqtt__ChangeThresholdPercent=2.0
+      - Mqtt__TimeZoneId=Europe/Brussels
+      - Mqtt__PollingIntervalSeconds=30
+      - Mqtt__ResponseTimeoutSeconds=5
+      - Mqtt__HomeAssistant__Discovery=true
+      - Mqtt__HomeAssistant__DiscoveryPrefix=homeassistant
+    ports:
+      - "5000:5000"
+    # NOTE: Removed network_mode: host to allow service name resolution for mosquitto
+    # If CAN interface access is needed, use privileged: true instead
+  duckdns:
+    restart: always
+    build: ./duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      # - SUBDOMAINS=yourdomain
+      # - TOKEN=your-duckdns-token
+    volumes:
+      - 'duckdns-data:/config'
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    network_mode: host
+    restart: always
+    volumes:
+      - matter-server-data:/data
+  redis:
+    restart: always
+    build: ./redis
+    volumes:
+      - 'redis-data:/data'
+    ports:
+      - "6379:6379"
+  z2m:
+    build: ./z2m
+    restart: always
+    volumes:
+      - 'z2m-data:/app/data'
+    ports:
+      - "8080:8080"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    environment:
+      - TZ=Europe/Berlin
+  samba:
+    restart: always
+    build: ./samba
+    environment:
+      - USERID=1000
+      - GROUPID=1000
+      - TZ=UTC
+      # Usage: -u "username;password" -s "sharename;path;browsable;readonly;guest;users;admins;writelist;comment"
+      - USER=${SMB_USER};${SMB_PASSWORD}
+      - SHARE=nodered;/shares/nodered;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE2=influxdb2;/shares/influxdb2;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE3=grafana;/shares/grafana;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE4=homeassistant-data;/shares/homeassistant-data;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE5=jupyterlab;/shares/jupyterlab;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE6=swag;/shares/swag;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE7=duplicati;/shares/duplicati;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE8=redis;/shares/redis;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE9=duckdns;/shares/duckdns;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE10=matter-server;/shares/matter-server;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE11=portainer;/shares/portainer;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE12=wireguard;/shares/wireguard;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE13=z2m;/shares/z2m;yes;no;no;${SMB_USER};${SMB_USER}
+      - SHARE14=rhasspy;/shares/rhasspy;yes;no;no;${SMB_USER};${SMB_USER}
+    volumes:
+      - 'nodered-data:/shares/nodered'
+      - 'influxdb2-data:/shares/influxdb2'
+      - 'grafana-data:/shares/grafana'
+      - 'homeassistant-data:/shares/homeassistant-data'
+      - 'jupyterlab-data:/shares/jupyterlab'
+      - 'swag-data:/shares/swag'
+      - 'duplicati-data:/shares/duplicati'
+      - 'redis-data:/shares/redis'
+      - 'duckdns-data:/shares/duckdns'
+      - 'matter-server-data:/shares/matter-server'
+      - 'portainer-data:/shares/portainer'
+      - 'wireguard-data:/shares/wireguard'
+      - 'samba-data:/config'
+      - 'z2m-data:/shares/z2m'
+      - 'rhasspy-data:/shares/rhasspy'
+    ports:
+      - "139:139"
+      - "445:445"
+  portainer:
+    restart: always
+    build: ./portainer
+    volumes:
+      - 'portainer-data:/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - "9000:9000"
+      - "8000:8000"
+  wireguard:
+    image: masipcat/wireguard-go
+    container_name: wireguard
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - wireguard-data:/etc/wireguard
+    restart: unless-stopped
+
 #  rhasspy:
 #    restart: always
 #    build: ./rhasspy

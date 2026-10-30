@@ -1,0 +1,25 @@
+FROM --platform=linux/%%BALENA_ARCH%% linuxserver/swag:latest
+
+# Copy homepage defaults
+COPY index.html /defaults/www/index.html
+
+# Copy proxy-confs
+COPY grafana.subdomain.conf /defaults/proxy-confs/
+COPY influxdb.subdomain.conf /defaults/proxy-confs/
+COPY jupyterlab.subdomain.conf /defaults/proxy-confs/
+COPY nodered.subdomain.conf /defaults/proxy-confs/
+COPY homeassistant.subdomain.conf /defaults/proxy-confs/
+COPY duplicati.subdomain.conf /defaults/proxy-confs/
+COPY portainer.subdomain.conf /defaults/proxy-confs/
+
+# Copy your subdomain logic entrypoint
+COPY entrypoint.sh /custom-entrypoint.sh
+RUN chmod +x /custom-entrypoint.sh
+
+# Copy a new script that runs AFTER defaults are copied
+COPY 99-rewrite-homepage.sh /etc/cont-init.d/99-rewrite-homepage
+RUN chmod +x /etc/cont-init.d/99-rewrite-homepage
+
+ENTRYPOINT ["/custom-entrypoint.sh"]
+
+EXPOSE 80 443

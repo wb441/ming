@@ -1,0 +1,1 @@
+FROM --platform=linux/arm koenkk/zigbee2mqtt:latest

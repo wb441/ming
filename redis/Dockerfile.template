@@ -1,0 +1,4 @@
+FROM --platform=linux/%%BALENA_ARCH%% redis:7-alpine
+
+# Enable persistence
+CMD ["redis-server", "--appendonly", "yes"]

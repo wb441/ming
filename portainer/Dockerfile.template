@@ -1,0 +1,11 @@
+FROM portainer/portainer-ce:latest
+
+# Portainer runs on port 9000 by default
+# Web UI: port 9000
+# Edge agent: port 8000 (optional)
+
+EXPOSE 9000
+EXPOSE 8000
+
+# Data volume is at /data
+VOLUME /data
